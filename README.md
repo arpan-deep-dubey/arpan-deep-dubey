@@ -100,6 +100,18 @@ Build useful products, learn continuously, and turn strong ideas into things peo
 
 ---
 
+## 📊 CONTRIBUTION ACTIVITY
+
+<div align="center">
+  <img
+    src="./assets/contribution/github-contribution-snake.svg"
+    width="100%"
+    alt="GitHub contribution activity snake"
+  />
+</div>
+
+---
+
 ## 🏆 ACHIEVEMENTS
 
 `PLAYER PROGRESSION`
