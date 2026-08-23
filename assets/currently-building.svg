@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 540" width="1200" height="540">
+<defs>
+  <!-- Main Panel Dark Gradient -->
+  <linearGradient id="panel-bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#0B0D14"/>
+    <stop offset="50%" stop-color="#080A0F"/>
+    <stop offset="100%" stop-color="#050609"/>
+  </linearGradient>
+
+  <!-- Glowing Markers Filters -->
+  <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#45E879" flood-opacity="0.6"/>
+  </filter>
+
+  <filter id="glow-crimson" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#FF3347" flood-opacity="0.5"/>
+  </filter>
+
+  <!-- Timeline Line Gradient -->
+  <linearGradient id="timeline-path" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#45E879" stop-opacity="0.8"/>
+    <stop offset="45%" stop-color="#45E879" stop-opacity="0.8"/>
+    <stop offset="60%" stop-color="#FF3347" stop-opacity="0.7"/>
+    <stop offset="100%" stop-color="#858994" stop-opacity="0.4"/>
+  </linearGradient>
+</defs>
+
+<!-- Outer Main Panel with Chamfered HUD Corners -->
+<path d="M 20 0 L 1180 0 L 1200 20 L 1200 520 L 1180 540 L 20 540 L 0 520 L 0 20 Z" fill="url(#panel-bg)" stroke="#8B1022" stroke-width="1"/>
+
+<!-- Corner HUD Accent Line Highlights -->
+<path d="M 0 36 L 0 20 L 20 0 L 36 0" fill="none" stroke="#FF3347" stroke-width="2"/>
+<path d="M 1164 0 L 1180 0 L 1200 20 L 1200 36" fill="none" stroke="#FF3347" stroke-width="2"/>
+<path d="M 1200 504 L 1200 520 L 1180 540 L 1164 540" fill="none" stroke="#FF3347" stroke-width="2"/>
+<path d="M 36 540 L 20 540 L 0 520 L 0 504" fill="none" stroke="#FF3347" stroke-width="2"/>
+
+<!-- Top HUD Header Section -->
+<g transform="translate(40, 32)">
+  <!-- Subtitle Tag -->
+  <text x="0" y="12" fill="#FF3347" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" letter-spacing="2">RADAR // PRODUCT DEVELOPMENT TIMELINE</text>
+  
+  <!-- Header Title -->
+  <text x="0" y="42" fill="#F2F2F4" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="800" letter-spacing="0.5">CURRENTLY BUILDING</text>
+
+  <!-- Live Status Badge on Right Header -->
+  <g transform="translate(980, 10)">
+    <rect x="0" y="0" width="140" height="26" rx="4" fill="#0C1510" stroke="#45E879" stroke-width="1" stroke-opacity="0.6"/>
+    <circle cx="14" cy="13" r="3.5" fill="#45E879" filter="url(#glow-green)"/>
+    <text x="26" y="17" fill="#45E879" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700" letter-spacing="1">LIVE TRACKING</text>
+  </g>
+</g>
+
+<!-- Header Underline Accent -->
+<line x1="40" y1="95" x2="1160" y2="95" stroke="#FF3347" stroke-width="1" stroke-opacity="0.2"/>
+
+<!-- ── HORIZONTAL RADAR TIMELINE PATH ────────── -->
+<!-- Base Path Line -->
+<line x1="60" y1="140" x2="1140" y2="140" stroke="url(#timeline-path)" stroke-width="2"/>
+
+<!-- Node 1: AI PRODUCT LAB (Active Target) -->
+<g id="node-1">
+  <circle cx="160" cy="140" r="14" fill="none" stroke="#45E879" stroke-width="1" opacity="0.3"/>
+  <circle cx="160" cy="140" r="8" fill="#080A0F" stroke="#45E879" stroke-width="2.5" filter="url(#glow-green)"/>
+  <circle cx="160" cy="140" r="3" fill="#45E879"/>
+  <!-- Drop Stem Connector Line -->
+  <line x1="160" y1="152" x2="160" y2="200" stroke="#45E879" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="160" cy="200" r="2.5" fill="#45E879"/>
+</g>
+
+<!-- Node 2: FULL-STACK SYSTEMS (Active Build) -->
+<g id="node-2">
+  <circle cx="440" cy="140" r="14" fill="none" stroke="#45E879" stroke-width="1" opacity="0.3"/>
+  <circle cx="440" cy="140" r="8" fill="#080A0F" stroke="#45E879" stroke-width="2.5" filter="url(#glow-green)"/>
+  <circle cx="440" cy="140" r="3" fill="#45E879"/>
+  <!-- Drop Stem Connector Line -->
+  <line x1="440" y1="152" x2="440" y2="200" stroke="#45E879" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="440" cy="200" r="2.5" fill="#45E879"/>
+</g>
+
+<!-- Node 3: AI AUTOMATION (In Progress) -->
+<g id="node-3">
+  <circle cx="720" cy="140" r="7" fill="#080A0F" stroke="#FF3347" stroke-width="2" filter="url(#glow-crimson)"/>
+  <circle cx="720" cy="140" r="2.5" fill="#FF3347"/>
+  <!-- Drop Stem Connector Line -->
+  <line x1="720" y1="150" x2="720" y2="200" stroke="#FF3347" stroke-width="1.5" stroke-dasharray="3,3" stroke-opacity="0.7"/>
+  <circle cx="720" cy="200" r="2.5" fill="#FF3347"/>
+</g>
+
+<!-- Node 4: WEB EXPERIENCES (Next Target) -->
+<g id="node-4">
+  <circle cx="1000" cy="140" r="7" fill="#080A0F" stroke="#858994" stroke-width="2"/>
+  <circle cx="1000" cy="140" r="2.5" fill="#858994"/>
+  <!-- Drop Stem Connector Line -->
+  <line x1="1000" y1="150" x2="1000" y2="200" stroke="#858994" stroke-width="1.5" stroke-dasharray="3,3" stroke-opacity="0.5"/>
+  <circle cx="1000" cy="200" r="2.5" fill="#858994"/>
+</g>
+
+
+<!-- ── COLUMN 01: AI PRODUCT LAB ────────── -->
+<g transform="translate(40, 215)">
+  <!-- Status Badge -->
+  <rect x="0" y="0" width="135" height="22" rx="4" fill="#0C1510" stroke="#45E879" stroke-width="1"/>
+  <circle cx="12" cy="11" r="3" fill="#45E879"/>
+  <text x="22" y="15" fill="#45E879" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700">CURRENT OBJECTIVE</text>
+
+  <!-- Technical Label -->
+  <text x="0" y="44" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600">01 // AI PRODUCTS</text>
+
+  <!-- Project Title -->
+  <text x="0" y="72" fill="#F2F2F4" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="800" letter-spacing="0.5">AI PRODUCT LAB</text>
+
+  <!-- Description -->
+  <text x="0" y="100" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">AI-powered product</text>
+  <text x="0" y="122" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">concepts, experiments</text>
+  <text x="0" y="144" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">&amp; intelligent digital</text>
+  <text x="0" y="166" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">experiences.</text>
+
+  <!-- Context Divider & Label -->
+  <line x1="0" y1="188" x2="230" y2="188" stroke="#FF3347" stroke-width="0.8" stroke-opacity="0.25"/>
+  <text x="0" y="206" fill="#FF3347" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">CONTEXT // Text-to-Image SaaS</text>
+  <text x="0" y="222" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="10">AI / Product Systems</text>
+</g>
+
+
+<!-- ── COLUMN 02: FULL-STACK SYSTEMS ────────── -->
+<g transform="translate(320, 215)">
+  <!-- Status Badge -->
+  <rect x="0" y="0" width="108" height="22" rx="4" fill="#0C1510" stroke="#45E879" stroke-width="1"/>
+  <circle cx="12" cy="11" r="3" fill="#45E879"/>
+  <text x="22" y="15" fill="#45E879" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700">ACTIVE BUILD</text>
+
+  <!-- Technical Label -->
+  <text x="0" y="44" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600">02 // WEB SAAS</text>
+
+  <!-- Project Title -->
+  <text x="0" y="72" fill="#F2F2F4" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="800" letter-spacing="0.5">FULL-STACK SYSTEMS</text>
+
+  <!-- Description -->
+  <text x="0" y="100" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">React + Node.js + Express</text>
+  <text x="0" y="122" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">+ MongoDB applications</text>
+  <text x="0" y="144" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">and SaaS-style systems.</text>
+
+  <!-- Context Divider & Label -->
+  <line x1="0" y1="188" x2="230" y2="188" stroke="#FF3347" stroke-width="0.8" stroke-opacity="0.25"/>
+  <text x="0" y="206" fill="#FF3347" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">CONTEXT // Ed-Tech Platform</text>
+  <text x="0" y="222" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="10">Full-Stack Applications</text>
+</g>
+
+
+<!-- ── COLUMN 03: AI AUTOMATION ────────── -->
+<g transform="translate(600, 215)">
+  <!-- Status Badge -->
+  <rect x="0" y="0" width="102" height="22" rx="4" fill="#1C1214" stroke="#FF3347" stroke-width="1" stroke-opacity="0.8"/>
+  <circle cx="12" cy="11" r="3" fill="#FF3347"/>
+  <text x="22" y="15" fill="#FF3347" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700">IN PROGRESS</text>
+
+  <!-- Technical Label -->
+  <text x="0" y="44" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600">03 // AUTOMATION</text>
+
+  <!-- Project Title -->
+  <text x="0" y="72" fill="#F2F2F4" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="800" letter-spacing="0.5">AI AUTOMATION</text>
+
+  <!-- Description -->
+  <text x="0" y="100" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">AI-powered workflows,</text>
+  <text x="0" y="122" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">APIs &amp; automation systems</text>
+  <text x="0" y="144" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">designed to reduce</text>
+  <text x="0" y="166" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">repetitive work.</text>
+
+  <!-- Context Divider & Label -->
+  <line x1="0" y1="188" x2="230" y2="188" stroke="#FF3347" stroke-width="0.8" stroke-opacity="0.25"/>
+  <text x="0" y="206" fill="#FF3347" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">CONTEXT // AI Workflows</text>
+  <text x="0" y="222" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="10">API &amp; Agent Automations</text>
+</g>
+
+
+<!-- ── COLUMN 04: WEB EXPERIENCES ────────── -->
+<g transform="translate(880, 215)">
+  <!-- Status Badge -->
+  <rect x="0" y="0" width="98" height="22" rx="4" fill="#12141A" stroke="#858994" stroke-width="1" stroke-opacity="0.6"/>
+  <circle cx="12" cy="11" r="3" fill="#858994"/>
+  <text x="22" y="15" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700">NEXT TARGET</text>
+
+  <!-- Technical Label -->
+  <text x="0" y="44" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600">04 // INTERFACES</text>
+
+  <!-- Project Title -->
+  <text x="0" y="72" fill="#F2F2F4" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="800" letter-spacing="0.5">WEB EXPERIENCES</text>
+
+  <!-- Description -->
+  <text x="0" y="100" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">Modern responsive</text>
+  <text x="0" y="122" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">websites, interactive</text>
+  <text x="0" y="144" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">interfaces &amp; product</text>
+  <text x="0" y="166" fill="#858994" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="400">experiences.</text>
+
+  <!-- Context Divider & Label -->
+  <line x1="0" y1="188" x2="230" y2="188" stroke="#FF3347" stroke-width="0.8" stroke-opacity="0.25"/>
+  <text x="0" y="206" fill="#FF3347" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">CONTEXT // SRL Group</text>
+  <text x="0" y="222" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="10">Digital Product &amp; Web</text>
+</g>
+
+<!-- ── BOTTOM HUD FOOTER BAR ────────── -->
+<line x1="40" y1="488" x2="1160" y2="488" stroke="#8B1022" stroke-width="1" stroke-opacity="0.4"/>
+
+<text x="40" y="512" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="1">CURRENT OBJECTIVE :: <tspan fill="#45E879" font-weight="700">AI PRODUCT LAB</tspan></text>
+
+<text x="1160" y="512" fill="#858994" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="1" text-anchor="end">STATUS :: <tspan fill="#45E879" font-weight="700">BUILDING</tspan></text>
+
+</svg>

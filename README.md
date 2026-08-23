@@ -92,14 +92,10 @@ Build useful products, learn continuously, and turn strong ideas into things peo
 
 ---
 
-## 📊 CONTRIBUTION ACTIVITY
+## 🚀 CURRENTLY BUILDING
 
 <div align="center">
-  <img
-    src="./assets/github-contribution-activity.gif"
-    width="100%"
-    alt="Animated GitHub contribution activity"
-  />
+<img src="./assets/currently-building.svg" alt="Currently Building - Product Development Radar" width="100%"/>
 </div>
 
 ---
