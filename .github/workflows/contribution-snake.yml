@@ -20,25 +20,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate Snake SVG
-        uses: Platane/snk/svg-only@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: |
-            assets/contribution/github-contribution-snake.svg?color_snake=#FF3347&color_dots=#16191F,#23301F,#285C32,#36934D,#40C463
+          python-version: "3.12"
+
+      - name: Generate Composite Contribution Calendar Snake SVG
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT || secrets.PAT || secrets.PERSONAL_ACCESS_TOKEN || secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.PAT || secrets.PERSONAL_ACCESS_TOKEN || secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/generate_contribution_snake.py ${{ github.repository_owner }} assets/contribution/github-contribution-calendar-snake.svg
 
       - name: Check for changes
         id: changes
         run: |
-          git diff --quiet assets/contribution/github-contribution-snake.svg && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --quiet assets/contribution/github-contribution-calendar-snake.svg && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push Snake SVG
         if: steps.changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/contribution/github-contribution-snake.svg
-          git commit -m "chore: update github contribution snake [skip ci]"
+          git add assets/contribution/github-contribution-calendar-snake.svg
+          git commit -m "chore: update github contribution calendar snake [skip ci]"
           git push
