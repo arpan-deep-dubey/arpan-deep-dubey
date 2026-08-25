@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 Generate an authentic GitHub contribution calendar animated GIF
-with a discrete cell-by-cell pixel-art Snake overlay.
+with a discrete cell-by-cell pixel-art Snake overlay that navigates
+exclusively through EMPTY cells around green contribution clusters.
 """
 import urllib.request
 import re
 import os
 import sys
 from datetime import datetime
+from collections import deque
 from PIL import Image, ImageDraw, ImageFont
 
 USERNAME = "arpan-deep-dubey"
@@ -53,40 +55,70 @@ def cell_xy(row: int, col: int) -> tuple[int, int]:
     cell_spacing = 13
     return grid_origin_x + col * cell_spacing, grid_origin_y + row * cell_spacing
 
-def build_snake_grid_path() -> list:
+def bfs_path(start: tuple, goal: tuple, blocked: set) -> list:
+    """Find shortest path on empty cells from start to goal using BFS."""
+    if start in blocked or goal in blocked:
+        return None
+    queue = deque([[start]])
+    visited = {start}
+    
+    while queue:
+        path = queue.popleft()
+        r, c = path[-1]
+        if (r, c) == goal:
+            return path
+        
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < 7 and 0 <= nc < 53:
+                if (nr, nc) not in blocked and (nr, nc) not in visited:
+                    visited.add((nr, nc))
+                    queue.append(path + [(nr, nc)])
+    return None
+
+def build_snake_grid_path(blocked_cells: set) -> list:
     """
     Generate an orthogonal (UP, DOWN, LEFT, RIGHT) cell-by-cell path
-    that weaves around green contribution clusters and loops cleanly.
+    that weaves strictly through EMPTY grid cells around green contribution clusters.
+    Uses dynamic reachability checks for 100% robust pathfinding.
     """
-    waypoints = [
-        (1, 10), (1, 28), (5, 28), (5, 34), (2, 34), (2, 44), 
-        (5, 44), (5, 45), (2, 45), (2, 51), (4, 51), (4, 52), 
-        (0, 52), (0, 48), (0, 10)
-    ]
+    cols_order = [5, 12, 20, 27, 33, 38, 43, 48, 50, 48, 43, 38, 33, 27, 20, 12, 5]
     
-    path = []
-    curr = waypoints[0]
-    path.append(curr)
+    current = None
+    for c in cols_order:
+        for r in range(7):
+            if (r, c) not in blocked_cells:
+                current = (r, c)
+                break
+        if current:
+            break
+            
+    full_path = [current]
     
-    for target in waypoints[1:]:
-        r, c = curr
-        tr, tc = target
-        while c != tc:
-            c += 1 if tc > c else -1
-            path.append((r, c))
-        while r != tr:
-            r += 1 if tr > r else -1
-            path.append((r, c))
-        curr = (r, c)
-        
-    return path
+    for idx, c in enumerate(cols_order[1:]):
+        empty_rows = [r for r in range(7) if (r, c) not in blocked_cells]
+        if idx % 2 == 1:
+            empty_rows.reverse()
+            
+        for r in empty_rows:
+            target = (r, c)
+            sub = bfs_path(current, target, blocked_cells)
+            if sub:
+                full_path.extend(sub[1:])
+                current = target
+                break
+                
+    final_sub = bfs_path(current, full_path[0], blocked_cells)
+    if final_sub:
+        full_path.extend(final_sub[1:])
+
+    return full_path
 
 def render_base_calendar(total_count: int, cells: list) -> Image.Image:
     width, height = 760, 170
     base = Image.new("RGBA", (width, height), "#0d1117")
     draw = ImageDraw.Draw(base)
     
-    # Try loading default font
     try:
         font_header = ImageFont.truetype("arial.ttf", 13)
         font_label = ImageFont.truetype("arial.ttf", 10)
@@ -190,14 +222,36 @@ def draw_snake_frame(base_img: Image.Image, path: list, frame_idx: int) -> Image
 
 def generate_snake_animation(total_count: int, cells: list, gif_out: str):
     base_img = render_base_calendar(total_count, cells)
-    path = build_snake_grid_path()
     
+    # Identify all green contribution cells as blocked obstacles
+    blocked_cells = set((c["row"], c["col"]) for c in cells if c["level"] > 0)
+    print(f"Identified {len(blocked_cells)} green contribution cells as blocked obstacles.")
+    
+    # Build path through EMPTY cells only
+    path = build_snake_grid_path(blocked_cells)
+    N = len(path)
+    print(f"Generated obstacle-avoiding snake path across {N} steps.")
+
+    # MANDATORY VALIDATION TEST: Assert 0 overlap across all frames & segments
+    for idx in range(N):
+        snake_segments = [
+            path[idx],
+            path[(idx - 1) % N],
+            path[(idx - 2) % N],
+            path[(idx - 3) % N],
+            path[(idx - 4) % N]
+        ]
+        overlaps = [seg for seg in snake_segments if seg in blocked_cells]
+        if overlaps:
+            raise RuntimeError(f"VALIDATION FAILURE: Frame {idx} overlaps green cell(s): {overlaps}")
+
+    print("VALIDATION SUCCESS: Verified 100% ZERO OVERLAP across all animation frames!")
+
     frames = []
-    print(f"Generating {len(path)} animation frames for Snake...")
+    print(f"Rendering {N} animation frames for Snake...")
     
-    for idx in range(len(path)):
+    for idx in range(N):
         frame = draw_snake_frame(base_img, path, idx)
-        # Convert to P mode with palette for optimized GIF
         p_frame = frame.convert("P", palette=Image.ADAPTIVE)
         frames.append(p_frame)
 
@@ -206,17 +260,19 @@ def generate_snake_animation(total_count: int, cells: list, gif_out: str):
         gif_out,
         save_all=True,
         append_images=frames[1:],
-        duration=150, # 150ms per frame = discrete cell crawling
+        duration=150,
         loop=0
     )
     print(f"Saved animated GIF at '{gif_out}'!")
 
-    # Export 5 debug frames for visual inspection
-    os.makedirs("scratch/debug_frames", exist_ok=True)
-    for i in range(5):
-        frame_idx = i * 12
+    # Export 10 debug frames for visual inspection
+    debug_dir = "scratch/debug_frames"
+    os.makedirs(debug_dir, exist_ok=True)
+    step_gap = max(1, N // 10)
+    for i in range(10):
+        frame_idx = (i * step_gap) % N
         debug_frame = draw_snake_frame(base_img, path, frame_idx)
-        debug_path = f"scratch/debug_frames/frame_{i+1}.png"
+        debug_path = os.path.join(debug_dir, f"frame_{i+1:02d}.png")
         debug_frame.save(debug_path)
         print(f"Saved debug frame {i+1} at '{debug_path}'")
 

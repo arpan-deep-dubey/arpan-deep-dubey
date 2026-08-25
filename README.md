@@ -104,7 +104,7 @@ Build useful products, learn continuously, and turn strong ideas into things peo
 
 <div align="center">
   <img
-    src="./assets/contribution/github-contribution-calendar-snake.gif?v=2"
+    src="./assets/contribution/github-contribution-calendar-snake.gif?v=4"
     width="100%"
     alt="GitHub contribution activity with animated Snake"
   />
