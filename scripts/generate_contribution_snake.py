@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-Generate a composite GitHub contribution calendar SVG with a discrete,
-cell-by-cell pixel-art Snake overlay.
+Generate an authentic GitHub contribution calendar animated GIF
+with a discrete cell-by-cell pixel-art Snake overlay.
 """
 import urllib.request
 import re
 import os
 import sys
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
 
 USERNAME = "arpan-deep-dubey"
 
@@ -20,7 +21,7 @@ def fetch_contributions(username: str) -> tuple[int, list]:
     
     # 1. Extract total count
     header_match = re.search(r'([\d,]+)\s+contributions?\s+in\s+the\s+last\s+year', html, re.IGNORECASE)
-    total_count = int(header_match.group(1).replace(",", "")) if header_match else 91
+    total_count = int(header_match.group(1).replace(",", "")) if header_match else 92
     
     # 2. Extract daily cell data
     td_blocks = re.findall(r'<td[^>]*class="ContributionCalendar-day"[^>]*>', html)
@@ -52,12 +53,11 @@ def cell_xy(row: int, col: int) -> tuple[int, int]:
     cell_spacing = 13
     return grid_origin_x + col * cell_spacing, grid_origin_y + row * cell_spacing
 
-def build_snake_grid_path(active_cells: list) -> list:
+def build_snake_grid_path() -> list:
     """
     Generate an orthogonal (UP, DOWN, LEFT, RIGHT) cell-by-cell path
     that weaves around green contribution clusters and loops cleanly.
     """
-    # Waypoints traversing active contribution clusters across the grid
     waypoints = [
         (1, 10), (1, 28), (5, 28), (5, 34), (2, 34), (2, 44), 
         (5, 44), (5, 45), (2, 45), (2, 51), (4, 51), (4, 52), 
@@ -71,7 +71,6 @@ def build_snake_grid_path(active_cells: list) -> list:
     for target in waypoints[1:]:
         r, c = curr
         tr, tc = target
-        # Orthogonal step by step movement
         while c != tc:
             c += 1 if tc > c else -1
             path.append((r, c))
@@ -82,8 +81,28 @@ def build_snake_grid_path(active_cells: list) -> list:
         
     return path
 
-def generate_svg(total_count: int, cells: list) -> str:
-    # Native GitHub Dark Mode contribution colors
+def render_base_calendar(total_count: int, cells: list) -> Image.Image:
+    width, height = 760, 170
+    base = Image.new("RGBA", (width, height), "#0d1117")
+    draw = ImageDraw.Draw(base)
+    
+    # Try loading default font
+    try:
+        font_header = ImageFont.truetype("arial.ttf", 13)
+        font_label = ImageFont.truetype("arial.ttf", 10)
+    except IOError:
+        font_header = ImageFont.load_default()
+        font_label = ImageFont.load_default()
+
+    # Header text
+    draw.text((46, 12), f"{total_count:,} contributions in the last year", fill="#e6edf3", font=font_header)
+    
+    # Weekday labels
+    draw.text((22, 54), "Mon", fill="#7d8590", font=font_label)
+    draw.text((22, 80), "Wed", fill="#7d8590", font=font_label)
+    draw.text((22, 106), "Fri", fill="#7d8590", font=font_label)
+    
+    # Color palette matching GitHub Dark Mode
     color_palette = {
         0: "#161b22",
         1: "#0e4429",
@@ -92,172 +111,124 @@ def generate_svg(total_count: int, cells: list) -> str:
         4: "#39d353"
     }
     
-    grid = {}
+    # Render Month Labels & Grid Cells
     month_positions = {}
-    
     for cell in cells:
-        row = cell["row"]
-        col = cell["col"]
-        grid[(row, col)] = cell
+        r, c = cell["row"], cell["col"]
+        x, y = cell_xy(r, c)
+        color = color_palette.get(cell["level"], "#161b22")
+        draw.rounded_rectangle([x, y, x + 10, y + 10], radius=2, fill=color)
         
         d = datetime.strptime(cell["date"], "%Y-%m-%d")
-        if d.day == 1 or (d.day <= 7 and col not in month_positions.values()):
-            month_name = d.strftime("%b")
-            if month_name not in month_positions:
-                month_positions[month_name] = col
+        if d.day == 1 or (d.day <= 7 and c not in month_positions.values()):
+            m_str = d.strftime("%b")
+            if m_str not in month_positions:
+                month_positions[m_str] = c
 
-    sorted_months = sorted([(col, m) for m, col in month_positions.items()])
+    for m_str, c in sorted([(m, c) for m, c in month_positions.items()], key=lambda x: x[1]):
+        x = 46 + c * 13
+        draw.text((x, 30), m_str, fill="#7d8590", font=font_label)
+
+    # Bottom Legend Section
+    legend_x = 560
+    legend_y = 142
+    draw.text((legend_x, legend_y), "Less", fill="#7d8590", font=font_label)
+    for idx, lvl in enumerate([0, 1, 2, 3, 4]):
+        lx = legend_x + 28 + idx * 14
+        draw.rounded_rectangle([lx, legend_y + 1, lx + 10, legend_y + 11], radius=2, fill=color_palette[lvl])
+    draw.text((legend_x + 98, legend_y), "More", fill="#7d8590", font=font_label)
+
+    return base
+
+def draw_snake_frame(base_img: Image.Image, path: list, frame_idx: int) -> Image.Image:
+    frame = base_img.copy()
+    draw = ImageDraw.Draw(frame)
+    N = len(path)
     
-    # 1. Render Contribution Cells Grid
-    cells_xml = []
-    for (row, col), cell in sorted(grid.items()):
-        x, y = cell_xy(row, col)
-        color = color_palette.get(cell["level"], "#161b22")
-        cells_xml.append(f'  <rect x="{x}" y="{y}" width="10" height="10" rx="2" fill="{color}"/>')
+    # 5 Snake segments: Head, Body1, Body2, Body3, Tail
+    head_r, head_c = path[frame_idx]
+    b1_r, b1_c = path[(frame_idx - 1) % N]
+    b2_r, b2_c = path[(frame_idx - 2) % N]
+    b3_r, b3_c = path[(frame_idx - 3) % N]
+    tail_r, tail_c = path[(frame_idx - 4) % N]
 
-    # 2. Render Month Labels
-    month_labels_xml = []
-    for col, month_str in sorted_months:
-        x = 46 + col * 13
-        month_labels_xml.append(f'  <text x="{x}" y="36" fill="#7d8590" font-family="-apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif" font-size="10">{month_str}</text>')
+    # Draw Tail (7x7 px)
+    tx, ty = cell_xy(tail_r, tail_c)
+    draw.rounded_rectangle([tx + 1, ty + 1, tx + 8, ty + 8], radius=2, fill="#A01424")
 
-    # 3. Generate Cell-by-Cell Snake Path & Keyframe Animations
-    active_cells = [(c["row"], c["col"]) for c in cells if c["level"] > 0]
-    snake_path = build_snake_grid_path(active_cells)
-    N = len(snake_path)
+    # Draw Body 3 (9x9 px)
+    b3x, b3y = cell_xy(b3_r, b3_c)
+    draw.rounded_rectangle([b3x, b3y, b3x + 9, b3y + 9], radius=2, fill="#C0192D")
+
+    # Draw Body 2 (10x10 px)
+    b2x, b2y = cell_xy(b2_r, b2_c)
+    draw.rounded_rectangle([b2x, b2y, b2x + 10, b2y + 10], radius=2, fill="#D91F36", outline="#080A0F", width=1)
+
+    # Draw Body 1 (10x10 px)
+    b1x, b1y = cell_xy(b1_r, b1_c)
+    draw.rounded_rectangle([b1x, b1y, b1x + 10, b1y + 10], radius=2, fill="#D91F36", outline="#080A0F", width=1)
+
+    # Draw Head (10x10 px)
+    hx, hy = cell_xy(head_r, head_c)
+    draw.rounded_rectangle([hx, hy, hx + 10, hy + 10], radius=2.5, fill="#FF3347", outline="#080A0F", width=1)
     
-    head_kf, b1_kf, b2_kf, b3_kf, tail_kf = [], [], [], [], []
+    # Directional eye indicator
+    next_r, next_c = path[(frame_idx + 1) % N]
+    dr = next_r - head_r
+    dc = next_c - head_c
     
-    for i in range(N):
-        pct = round((i / N) * 100, 2)
-        
-        # Head at step i
-        hx, hy = cell_xy(*snake_path[i])
-        head_kf.append(f"  {pct}% {{ transform: translate({hx}px, {hy}px); }}")
-        
-        # Body 1 at step i-1
-        b1x, b1y = cell_xy(*snake_path[(i - 1) % N])
-        b1_kf.append(f"  {pct}% {{ transform: translate({b1x}px, {b1y}px); }}")
-        
-        # Body 2 at step i-2
-        b2x, b2y = cell_xy(*snake_path[(i - 2) % N])
-        b2_kf.append(f"  {pct}% {{ transform: translate({b2x}px, {b2y}px); }}")
-        
-        # Body 3 at step i-3
-        b3x, b3y = cell_xy(*snake_path[(i - 3) % N])
-        b3_kf.append(f"  {pct}% {{ transform: translate({b3x + 0.5}px, {b3y + 0.5}px); }}")
-        
-        # Tail at step i-4
-        tx, ty = cell_xy(*snake_path[(i - 4) % N])
-        tail_kf.append(f"  {pct}% {{ transform: translate({tx + 1.5}px, {ty + 1.5}px); }}")
+    if dc > 0: # Moving Right
+        draw.ellipse([hx + 7, hy + 2, hx + 9, hy + 4], fill="#FF6B78")
+    elif dc < 0: # Moving Left
+        draw.ellipse([hx + 1, hy + 2, hx + 3, hy + 4], fill="#FF6B78")
+    elif dr > 0: # Moving Down
+        draw.ellipse([hx + 7, hy + 7, hx + 9, hy + 9], fill="#FF6B78")
+    else: # Moving Up
+        draw.ellipse([hx + 7, hy + 1, hx + 9, hy + 3], fill="#FF6B78")
 
-    # Final 100% keyframe to close animation loop
-    h0x, h0y = cell_xy(*snake_path[0])
-    b10x, b10y = cell_xy(*snake_path[-1])
-    b20x, b20y = cell_xy(*snake_path[-2])
-    b30x, b30y = cell_xy(*snake_path[-3])
-    t0x, t0y = cell_xy(*snake_path[-4])
+    return frame
+
+def generate_snake_animation(total_count: int, cells: list, gif_out: str):
+    base_img = render_base_calendar(total_count, cells)
+    path = build_snake_grid_path()
     
-    head_kf.append(f"  100% {{ transform: translate({h0x}px, {h0y}px); }}")
-    b1_kf.append(f"  100% {{ transform: translate({b10x}px, {b10y}px); }}")
-    b2_kf.append(f"  100% {{ transform: translate({b20x}px, {b20y}px); }}")
-    b3_kf.append(f"  100% {{ transform: translate({b30x + 0.5}px, {b30y + 0.5}px); }}")
-    tail_kf.append(f"  100% {{ transform: translate({t0x + 1.5}px, {t0y + 1.5}px); }}")
+    frames = []
+    print(f"Generating {len(path)} animation frames for Snake...")
+    
+    for idx in range(len(path)):
+        frame = draw_snake_frame(base_img, path, idx)
+        # Convert to P mode with palette for optimized GIF
+        p_frame = frame.convert("P", palette=Image.ADAPTIVE)
+        frames.append(p_frame)
 
-    duration_sec = round(N * 0.15, 1) # 150ms per cell step
+    os.makedirs(os.path.dirname(gif_out), exist_ok=True)
+    frames[0].save(
+        gif_out,
+        save_all=True,
+        append_images=frames[1:],
+        duration=150, # 150ms per frame = discrete cell crawling
+        loop=0
+    )
+    print(f"Saved animated GIF at '{gif_out}'!")
 
-    svg_str = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 170" width="100%" height="170">
-<style>
-  .bg {{ fill: #0d1117; rx: 6px; }}
-  .header-text {{ fill: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; }}
-  .label-text {{ fill: #7d8590; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 10px; }}
-  
-  /* Pixel-art Snake Segment Styling */
-  .s-head-rect {{ fill: #FF3347; stroke: #080A0F; stroke-width: 0.8; }}
-  .s-eye {{ fill: #FF6B78; }}
-  .s-b1 {{ fill: #D91F36; stroke: #080A0F; stroke-width: 0.5; animation: move-b1 {duration_sec}s steps(1) infinite; }}
-  .s-b2 {{ fill: #D91F36; stroke: #080A0F; stroke-width: 0.5; animation: move-b2 {duration_sec}s steps(1) infinite; }}
-  .s-b3 {{ fill: #C0192D; opacity: 0.9; animation: move-b3 {duration_sec}s steps(1) infinite; }}
-  .s-tail {{ fill: #A01424; opacity: 0.8; animation: move-tail {duration_sec}s steps(1) infinite; }}
-  .s-head-group {{ animation: move-head {duration_sec}s steps(1) infinite; }}
-
-  @keyframes move-head {{
-{chr(10).join(head_kf)}
-  }}
-  @keyframes move-b1 {{
-{chr(10).join(b1_kf)}
-  }}
-  @keyframes move-b2 {{
-{chr(10).join(b2_kf)}
-  }}
-  @keyframes move-b3 {{
-{chr(10).join(b3_kf)}
-  }}
-  @keyframes move-tail {{
-{chr(10).join(tail_kf)}
-  }}
-</style>
-
-<!-- Native Dark Card Background -->
-<rect width="760" height="170" class="bg"/>
-
-<!-- Official Total Contributions Header -->
-<text x="46" y="20" class="header-text">{total_count:,} contributions in the last year</text>
-
-<!-- Month Labels -->
-{''.join(month_labels_xml)}
-
-<!-- Weekday Labels -->
-<text x="22" y="58" class="label-text">Mon</text>
-<text x="22" y="84" class="label-text">Wed</text>
-<text x="22" y="110" class="label-text">Fri</text>
-
-<!-- Native Contribution Cells Grid (Green Levels Preserved) -->
-<g id="contribution-cells">
-{chr(10).join(cells_xml)}
-</g>
-
-<!-- Animated Pixel Snake Overlay (Discrete Cell Steps) -->
-<g id="pixel-snake">
-  <rect class="s-tail" width="7" height="7" rx="2"/>
-  <rect class="s-b3" width="9" height="9" rx="2"/>
-  <rect class="s-b2" width="10" height="10" rx="2"/>
-  <rect class="s-b1" width="10" height="10" rx="2"/>
-  <g class="s-head-group">
-    <rect class="s-head-rect" width="10" height="10" rx="2.5"/>
-    <circle cx="7.5" cy="2.5" r="1.2" class="s-eye"/>
-  </g>
-</g>
-
-<!-- Bottom Legend Section -->
-<g transform="translate(560, 142)">
-  <text x="0" y="9" class="label-text">Less</text>
-  <rect x="28" y="0" width="10" height="10" rx="2" fill="#161b22"/>
-  <rect x="42" y="0" width="10" height="10" rx="2" fill="#0e4429"/>
-  <rect x="56" y="0" width="10" height="10" rx="2" fill="#006d32"/>
-  <rect x="70" y="0" width="10" height="10" rx="2" fill="#26a641"/>
-  <rect x="84" y="0" width="10" height="10" rx="2" fill="#39d353"/>
-  <text x="98" y="9" class="label-text">More</text>
-</g>
-
-</svg>
-'''
-    return svg_str
+    # Export 5 debug frames for visual inspection
+    os.makedirs("scratch/debug_frames", exist_ok=True)
+    for i in range(5):
+        frame_idx = i * 12
+        debug_frame = draw_snake_frame(base_img, path, frame_idx)
+        debug_path = f"scratch/debug_frames/frame_{i+1}.png"
+        debug_frame.save(debug_path)
+        print(f"Saved debug frame {i+1} at '{debug_path}'")
 
 def main():
     username = sys.argv[1] if len(sys.argv) > 1 else USERNAME
-    out_file = sys.argv[2] if len(sys.argv) > 2 else "assets/contribution/github-contribution-calendar-snake.svg"
+    gif_out = sys.argv[2] if len(sys.argv) > 2 else "assets/contribution/github-contribution-calendar-snake.gif"
     
     print(f"Fetching GitHub contribution calendar for user '{username}'...")
     total_count, cells = fetch_contributions(username)
     print(f"Fetched {total_count} total contributions across {len(cells)} day cells.")
     
-    svg = generate_svg(total_count, cells)
-    
-    os.makedirs(os.path.dirname(out_file), exist_ok=True)
-    with open(out_file, "w", encoding="utf-8") as f:
-        f.write(svg)
-    print(f"Successfully generated composite pixel snake calendar at '{out_file}'!")
+    generate_snake_animation(total_count, cells, gif_out)
 
 if __name__ == "__main__":
     main()

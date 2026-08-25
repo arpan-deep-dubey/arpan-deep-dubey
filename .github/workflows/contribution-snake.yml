@@ -25,23 +25,27 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate Composite Contribution Calendar Snake SVG
+      - name: Install dependencies
+        run: |
+          pip install pillow
+
+      - name: Generate Composite Contribution Calendar Snake GIF
         env:
           GH_PAT: ${{ secrets.GH_PAT || secrets.PAT || secrets.PERSONAL_ACCESS_TOKEN || secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.PAT || secrets.PERSONAL_ACCESS_TOKEN || secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          python scripts/generate_contribution_snake.py ${{ github.repository_owner }} assets/contribution/github-contribution-calendar-snake.svg
+          python scripts/generate_contribution_snake.py ${{ github.repository_owner }} assets/contribution/github-contribution-calendar-snake.gif
 
       - name: Check for changes
         id: changes
         run: |
-          git diff --quiet assets/contribution/github-contribution-calendar-snake.svg && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --quiet assets/contribution/github-contribution-calendar-snake.gif && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Commit and push Snake SVG
+      - name: Commit and push Snake GIF
         if: steps.changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/contribution/github-contribution-calendar-snake.svg
+          git add assets/contribution/github-contribution-calendar-snake.gif
           git commit -m "chore: update github contribution calendar snake [skip ci]"
           git push
